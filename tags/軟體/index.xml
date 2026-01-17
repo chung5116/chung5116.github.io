@@ -1,0 +1,382 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>軟體 on Austin Chang's Blog</title><link>https://chung5116.github.io/tags/%E8%BB%9F%E9%AB%94/</link><description>Recent content in 軟體 on Austin Chang's Blog</description><generator>Hugo -- gohugo.io</generator><language>en</language><lastBuildDate>Sat, 24 Feb 2024 18:29:41 +0000</lastBuildDate><atom:link href="https://chung5116.github.io/tags/%E8%BB%9F%E9%AB%94/index.xml" rel="self" type="application/rss+xml"/><item><title>GPG 簽署 git commit</title><link>https://chung5116.github.io/p/github-gpg-key/</link><pubDate>Sat, 24 Feb 2024 18:29:41 +0000</pubDate><guid>https://chung5116.github.io/p/github-gpg-key/</guid><description>&lt;h2 id="前言"&gt;前言
+&lt;/h2&gt;&lt;p&gt;前陣子在 GitHub 上，偶然看到同事的 commit 後面有綠色的 Verified 標示，我的卻沒有。&lt;/p&gt;
+&lt;p&gt;有那個 Verified 標示看起來就比較厲害，j我也想要有!&lt;/p&gt;
+&lt;p&gt;搜尋一下，原來是需要透過 GPG 簽署才有這個功能，我目前使用的 SSH 不支援，因此，需要更換簽署。&lt;/p&gt;
+&lt;p&gt;&lt;img src="https://chung5116.github.io/p/github-gpg-key/verified-commit.jpg"
+width="1440"
+height="164"
+srcset="https://chung5116.github.io/p/github-gpg-key/verified-commit_hu_20f84f971f673ede.jpg 480w, https://chung5116.github.io/p/github-gpg-key/verified-commit_hu_d7a9bb423b168ff4.jpg 1024w"
+loading="lazy"
+class="gallery-image"
+data-flex-grow="878"
+data-flex-basis="2107px"
+&gt;&lt;/p&gt;
+&lt;p&gt;其實 GitHub 的官網&lt;a class="link" href="https://docs.github.com/en/authentication/managing-commit-signature-verification/about-commit-signature-verification" target="_blank" rel="noopener"
+&gt;文件&lt;/a&gt;已經寫得很完整了，下方就是翻譯以及節錄重點。&lt;/p&gt;
+&lt;hr&gt;
+&lt;h2 id="開始更換"&gt;開始更換
+&lt;/h2&gt;&lt;h3 id="安裝-gpg"&gt;安裝 GPG
+&lt;/h3&gt;&lt;p&gt;到 &lt;a class="link" href="https://www.gnupg.org/download/" target="_blank" rel="noopener"
+&gt;GnuPG&amp;rsquo;s Download page&lt;/a&gt; 下載，根據你的作業系統選擇。我是下載 GnuPG binary releases 下方的 Gpg4win (Windows)。&lt;/p&gt;
+&lt;h3 id="檢查已存在的-gpg-keys"&gt;檢查已存在的 GPG keys
+&lt;/h3&gt;&lt;ol&gt;
+&lt;li&gt;打開 Git Bash。注意: 使用 VSCode 的 powershell 會找不到 GPG 工具哦&lt;/li&gt;
+&lt;li&gt;檢查已經存在的 public and private key
+&lt;pre tabindex="0"&gt;&lt;code&gt;gpg --list-secret-keys --keyid-format=long
+&lt;/code&gt;&lt;/pre&gt;&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h3 id="產生-gpg-key"&gt;產生 GPG key
+&lt;/h3&gt;&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;打開 Git Bash&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;產生 GPG key pair&lt;/p&gt;
+&lt;pre tabindex="0"&gt;&lt;code&gt;gpg --full-generate-key
+&lt;/code&gt;&lt;/pre&gt;&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;根據顯示的內容回答，或是按 &amp;rsquo;enter&amp;rsquo; 接收預設值設定&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;輸入你的 ID，記得 email 要填寫跟 GitHub 相同的 email&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;輸入安全密碼&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;列出剛才產生的 Key&lt;/p&gt;
+&lt;pre tabindex="0"&gt;&lt;code&gt;gpg --list-secret-keys --keyid-format=long
+&lt;/code&gt;&lt;/pre&gt;&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;你會看到類似下方結果，&lt;code&gt;3AA5C34371567BD2&lt;/code&gt; 就是此範例的 key ID 囉&lt;/p&gt;
+&lt;pre tabindex="0"&gt;&lt;code&gt;$ gpg --list-secret-keys --keyid-format=long
+/Users/hubot/.gnupg/secring.gpg
+------------------------------------
+sec 4096R/3AA5C34371567BD2 2016-03-10 [expires: 2017-03-10]
+uid Hubot &amp;lt;hubot@example.com&amp;gt;
+ssb 4096R/4BB6D45482678BE3 2016-03-10
+&lt;/code&gt;&lt;/pre&gt;&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;將下面的範例 ID 替換成你的&lt;/p&gt;
+&lt;pre tabindex="0"&gt;&lt;code&gt;gpg --armor --export 3AA5C34371567BD2
+# Prints the GPG key ID, in ASCII armor format
+&lt;/code&gt;&lt;/pre&gt;&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;複製 GPG key，從 &lt;code&gt;-----BEGIN PGP PUBLIC KEY BLOCK-----&lt;/code&gt; 一直複製到 &lt;code&gt;-----END PGP PUBLIC KEY BLOCK-----&lt;/code&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;將此 GPG key 加入到你的 GitHub 帳號&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h3 id="加入-gpg-key"&gt;加入 GPG Key
+&lt;/h3&gt;&lt;ol&gt;
+&lt;li&gt;點擊個人頭像，進入 &lt;strong&gt;Settings&lt;/strong&gt;&lt;/li&gt;
+&lt;li&gt;click &lt;strong&gt;SSH and GPG keys&lt;/strong&gt;&lt;/li&gt;
+&lt;li&gt;click &lt;strong&gt;New GPG key&lt;/strong&gt;.&lt;/li&gt;
+&lt;li&gt;將剛剛的複製的 Key 貼上&lt;/li&gt;
+&lt;li&gt;完成&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;備註: 此動作需要 2FA&lt;/p&gt;
+&lt;h3 id="向-git-通知你的-gpg-key"&gt;向 Git 通知你的 GPG key
+&lt;/h3&gt;&lt;ol&gt;
+&lt;li&gt;打開 Git Bash&lt;/li&gt;
+&lt;li&gt;如果你之前有使用不同的金鑰格式，需要取消
+&lt;pre tabindex="0"&gt;&lt;code&gt;git config --global --unset gpg.format
+&lt;/code&gt;&lt;/pre&gt;&lt;/li&gt;
+&lt;li&gt;向 Git 設定你的主要 GPG signing key。&lt;code&gt;3AA5C34371567BD2&lt;/code&gt; 為範例 ID
+&lt;pre tabindex="0"&gt;&lt;code&gt;git config --global user.signingkey 3AA5C34371567BD2
+&lt;/code&gt;&lt;/pre&gt;&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;以上，就完成 GPG 註冊啦。趕快開一個 Repo 測試看看吧。&lt;/p&gt;
+&lt;h3 id="小插曲"&gt;小插曲
+&lt;/h3&gt;&lt;p&gt;我在第一次設定完後，並沒有成功看到綠色的 Verified，於是又重頭回去檢查前面哪些步驟出錯。&lt;/p&gt;
+&lt;p&gt;後來發現是我的 &lt;code&gt;git config&lt;/code&gt; 設定，&lt;code&gt;user.email&lt;/code&gt; 是我個人的 email，又來修改成公司的 email 後，就成功出現 Verified 啦!&lt;/p&gt;</description></item><item><title>Python Coding Style</title><link>https://chung5116.github.io/p/python-coding-style/</link><pubDate>Sun, 21 Jan 2024 00:00:00 +0000</pubDate><guid>https://chung5116.github.io/p/python-coding-style/</guid><description>&lt;img src="https://chung5116.github.io/p/python-coding-style/naming.png" alt="Featured image of post Python Coding Style" /&gt;&lt;p&gt;Follow &lt;a class="link" href="https://google.github.io/styleguide/pyguide.html" target="_blank" rel="noopener"
+&gt;Google Python Style Guide&lt;/a&gt;，下方列出幾點我覺得重要的。&lt;/p&gt;
+&lt;h2 id="naming"&gt;Naming
+&lt;/h2&gt;&lt;ol&gt;
+&lt;li&gt;使用 Snake Case 命名&lt;/li&gt;
+&lt;li&gt;Internal 表示僅 module 內可用，或是 private&lt;/li&gt;
+&lt;li&gt;下劃線 (_) 開頭表示 module variable，或函數是 protected的 (使用import * from時不會包含)&lt;/li&gt;
+&lt;li&gt;雙下劃線 (__) 開頭的 instance variable 或 method 表示類內私有.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;&lt;img src="https://chung5116.github.io/p/python-coding-style/naming.png"
+width="891"
+height="595"
+srcset="https://chung5116.github.io/p/python-coding-style/naming_hu_f9bde759e083019a.png 480w, https://chung5116.github.io/p/python-coding-style/naming_hu_709474e17fa78e47.png 1024w"
+loading="lazy"
+class="gallery-image"
+data-flex-grow="149"
+data-flex-basis="359px"
+&gt;&lt;/p&gt;
+&lt;h2 id="comments"&gt;Comments
+&lt;/h2&gt;&lt;h3 id="functions-and-methods"&gt;Functions and Methods
+&lt;/h3&gt;&lt;ol&gt;
+&lt;li&gt;Args&lt;/li&gt;
+&lt;li&gt;Returns&lt;/li&gt;
+&lt;li&gt;Raises&lt;/li&gt;
+&lt;/ol&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-python" data-lang="python"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;def&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;fetch_smalltable_rows&lt;/span&gt;(
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; table_handle: smalltable&lt;span style="color:#f92672"&gt;.&lt;/span&gt;Table,
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; keys: Sequence[bytes &lt;span style="color:#f92672"&gt;|&lt;/span&gt; str],
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; require_all_keys: bool &lt;span style="color:#f92672"&gt;=&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;False&lt;/span&gt;,&lt;span style="color:#960050;background-color:#1e0010"&gt;【&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;) &lt;span style="color:#f92672"&gt;-&amp;gt;&lt;/span&gt; Mapping[bytes, tuple[str, &lt;span style="color:#f92672"&gt;...&lt;/span&gt;]]:
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#e6db74"&gt;&amp;#34;&amp;#34;&amp;#34;Fetches rows from a Smalltable.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#e6db74"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#e6db74"&gt; Retrieves rows pertaining to the given keys from the Table instance
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#e6db74"&gt; represented by table_handle. String keys will be UTF-8 encoded.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#e6db74"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#e6db74"&gt; Args:
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#e6db74"&gt; table_handle: An open smalltable.Table instance.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#e6db74"&gt; keys: A sequence of strings representing the key of each table
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#e6db74"&gt; row to fetch. String keys will be UTF-8 encoded.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#e6db74"&gt; require_all_keys: If True only rows with values set for all keys will be
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#e6db74"&gt; returned.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#e6db74"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#e6db74"&gt; Returns:
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#e6db74"&gt; A dict mapping keys to the corresponding table row data
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#e6db74"&gt; fetched. Each row is represented as a tuple of strings. For
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#e6db74"&gt; example:
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#e6db74"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#e6db74"&gt; {b&amp;#39;Serak&amp;#39;: (&amp;#39;Rigel VII&amp;#39;, &amp;#39;Preparer&amp;#39;),
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#e6db74"&gt; b&amp;#39;Zim&amp;#39;: (&amp;#39;Irk&amp;#39;, &amp;#39;Invader&amp;#39;),
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#e6db74"&gt; b&amp;#39;Lrrr&amp;#39;: (&amp;#39;Omicron Persei 8&amp;#39;, &amp;#39;Emperor&amp;#39;)}
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#e6db74"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#e6db74"&gt; Returned keys are always bytes. If a key from the keys argument is
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#e6db74"&gt; missing from the dictionary, then that row was not found in the
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#e6db74"&gt; table (and require_all_keys must have been False).
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#e6db74"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#e6db74"&gt; Raises:
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#e6db74"&gt; IOError: An error occurred accessing the smalltable.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#e6db74"&gt; &amp;#34;&amp;#34;&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id="classes"&gt;Classes
+&lt;/h3&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-python" data-lang="python"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;SampleClass&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#e6db74"&gt;&amp;#34;&amp;#34;&amp;#34;Summary of class here.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#e6db74"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#e6db74"&gt; Longer class information...
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#e6db74"&gt; Longer class information...
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#e6db74"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#e6db74"&gt; Attributes:
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#e6db74"&gt; likes_spam: A boolean indicating if we like SPAM or not.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#e6db74"&gt; eggs: An integer count of the eggs we have laid.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#e6db74"&gt; &amp;#34;&amp;#34;&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;def&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;__init__&lt;/span&gt;(self, likes_spam: bool &lt;span style="color:#f92672"&gt;=&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;False&lt;/span&gt;):
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#e6db74"&gt;&amp;#34;&amp;#34;&amp;#34;Initializes the instance based on spam preference.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#e6db74"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#e6db74"&gt; Args:
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#e6db74"&gt; likes_spam: Defines if instance exhibits this preference.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#e6db74"&gt; &amp;#34;&amp;#34;&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; self&lt;span style="color:#f92672"&gt;.&lt;/span&gt;likes_spam &lt;span style="color:#f92672"&gt;=&lt;/span&gt; likes_spam
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; self&lt;span style="color:#f92672"&gt;.&lt;/span&gt;eggs &lt;span style="color:#f92672"&gt;=&lt;/span&gt; &lt;span style="color:#ae81ff"&gt;0&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;def&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;public_method&lt;/span&gt;(self):
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#e6db74"&gt;&amp;#34;&amp;#34;&amp;#34;Performs operation blah.&amp;#34;&amp;#34;&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id="block-and-inline-comments"&gt;Block and Inline Comments
+&lt;/h3&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-python" data-lang="python"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# We use a weighted dictionary search to find out where i is in&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# the array. We extrapolate position based on the largest num&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# in the array and the array size and then do binary search to&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# get the exact number.&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;if&lt;/span&gt; i &lt;span style="color:#f92672"&gt;&amp;amp;&lt;/span&gt; (i&lt;span style="color:#f92672"&gt;-&lt;/span&gt;&lt;span style="color:#ae81ff"&gt;1&lt;/span&gt;) &lt;span style="color:#f92672"&gt;==&lt;/span&gt; &lt;span style="color:#ae81ff"&gt;0&lt;/span&gt;: &lt;span style="color:#75715e"&gt;# True if i is 0 or a power of 2.&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id="imports-formatting"&gt;Imports formatting
+&lt;/h3&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-python" data-lang="python"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;Yes: &lt;span style="color:#f92672"&gt;from&lt;/span&gt; collections.abc &lt;span style="color:#f92672"&gt;import&lt;/span&gt; Mapping, Sequence
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#f92672"&gt;import&lt;/span&gt; os
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#f92672"&gt;import&lt;/span&gt; sys
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#f92672"&gt;from&lt;/span&gt; typing &lt;span style="color:#f92672"&gt;import&lt;/span&gt; Any, NewType
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;No: &lt;span style="color:#f92672"&gt;import&lt;/span&gt; os&lt;span style="color:#f92672"&gt;,&lt;/span&gt; sys
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;導入需要放在文件頂部，導入按照下方順序。各分組中，需要根據字母大小排序，忽略大小寫&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;標準庫導入&lt;/li&gt;
+&lt;li&gt;第三方庫導入&lt;/li&gt;
+&lt;li&gt;應用程序指定導入&lt;/li&gt;
+&lt;/ol&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-python" data-lang="python"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#f92672"&gt;import&lt;/span&gt; collections
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#f92672"&gt;import&lt;/span&gt; queue
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#f92672"&gt;import&lt;/span&gt; sys
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#f92672"&gt;from&lt;/span&gt; absl &lt;span style="color:#f92672"&gt;import&lt;/span&gt; app
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#f92672"&gt;from&lt;/span&gt; absl &lt;span style="color:#f92672"&gt;import&lt;/span&gt; flags
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#f92672"&gt;import&lt;/span&gt; bs4
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#f92672"&gt;import&lt;/span&gt; cryptography
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#f92672"&gt;import&lt;/span&gt; tensorflow &lt;span style="color:#66d9ef"&gt;as&lt;/span&gt; tf
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#f92672"&gt;from&lt;/span&gt; book.genres &lt;span style="color:#f92672"&gt;import&lt;/span&gt; scifi
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#f92672"&gt;from&lt;/span&gt; myproject.backend &lt;span style="color:#f92672"&gt;import&lt;/span&gt; huxley
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#f92672"&gt;from&lt;/span&gt; myproject.backend.hgwells &lt;span style="color:#f92672"&gt;import&lt;/span&gt; time_machine
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#f92672"&gt;from&lt;/span&gt; myproject.backend.state_machine &lt;span style="color:#f92672"&gt;import&lt;/span&gt; main_loop
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#f92672"&gt;from&lt;/span&gt; otherproject.ai &lt;span style="color:#f92672"&gt;import&lt;/span&gt; body
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#f92672"&gt;from&lt;/span&gt; otherproject.ai &lt;span style="color:#f92672"&gt;import&lt;/span&gt; mind
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#f92672"&gt;from&lt;/span&gt; otherproject.ai &lt;span style="color:#f92672"&gt;import&lt;/span&gt; soul
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# Older style code may have these imports down here instead:&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;#from myproject.backend.hgwells import time_machine&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;#from myproject.backend.state_machine import main_loop&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id="tools"&gt;Tools
+&lt;/h2&gt;&lt;h3 id="isort"&gt;isort
+&lt;/h3&gt;&lt;p&gt;自動排序 import 程式行令其符合 PEP8 風格。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-json" data-lang="json"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#e6db74"&gt;&amp;#34;isort.args&amp;#34;&lt;/span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;:&lt;/span&gt; [
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#e6db74"&gt;&amp;#34;--src=${workspaceFolder}&amp;#34;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#e6db74"&gt;&amp;#34;--line-length=120&amp;#34;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;]&lt;span style="color:#960050;background-color:#1e0010"&gt;,&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;存檔時自動格式化&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-json" data-lang="json"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#e6db74"&gt;&amp;#34;[python]&amp;#34;&lt;/span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;:&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#f92672"&gt;&amp;#34;editor.codeActionsOnSave&amp;#34;&lt;/span&gt;: {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#f92672"&gt;&amp;#34;source.organizeImports&amp;#34;&lt;/span&gt;: &lt;span style="color:#66d9ef"&gt;true&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; },
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#960050;background-color:#1e0010"&gt;...&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}&lt;span style="color:#960050;background-color:#1e0010"&gt;,&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id="flake8"&gt;flake8
+&lt;/h3&gt;&lt;p&gt;為 Python Linter，檢查程式是否有語法錯誤並提示、檢查程式是否符合 PEP 8 風格並提示。VS Code 設定 Flake8 只有幾個重要的環節，依序如下:&lt;/p&gt;
+&lt;p&gt;開啟 Python Linting：Python › Linting: Enabled
+開啟 Flake8 Linting：Python › Linting: Flake8 Enabled
+設定 Flake8 Args（非必要）：Python › Linting: Flake8 Args&lt;/p&gt;
+&lt;p&gt;或是直接在 VS Code 的settings.json 加入以下內容&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-json" data-lang="json"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#e6db74"&gt;&amp;#34;python.linting.enabled&amp;#34;&lt;/span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;:&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;true&lt;/span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;,&lt;/span&gt; &lt;span style="color:#75715e"&gt;// 預設值即為 true
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#e6db74"&gt;&amp;#34;python.linting.flake8Enabled&amp;#34;&lt;/span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;:&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;true&lt;/span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;,&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#e6db74"&gt;&amp;#34;python.linting.flake8Args&amp;#34;&lt;/span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;:&lt;/span&gt; [
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#e6db74"&gt;&amp;#34;--max-line-length=120&amp;#34;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#e6db74"&gt;&amp;#34;--ignore=E402,F841,F401,E302,E305&amp;#34;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;]
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id="yapf"&gt;yapf
+&lt;/h3&gt;&lt;p&gt;Python formatter，主要是為了讓 Python 程式碼可以最大限度遵守 PEP 8 及一般風格規範。settings.json設定如下：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-json" data-lang="json"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#e6db74"&gt;&amp;#34;python.formatting.provider&amp;#34;&lt;/span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;:&lt;/span&gt; &lt;span style="color:#e6db74"&gt;&amp;#34;yapf&amp;#34;&lt;/span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;,&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#e6db74"&gt;&amp;#34;python.formatting.yapfArgs&amp;#34;&lt;/span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;:&lt;/span&gt; [
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#e6db74"&gt;&amp;#34;--style={column_limit=120}&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; ]&lt;span style="color:#960050;background-color:#1e0010"&gt;,&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#e6db74"&gt;&amp;#34;editor.formatOnSave&amp;#34;&lt;/span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;:&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;true&lt;/span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;,&lt;/span&gt; &lt;span style="color:#75715e"&gt;// 不支援 afterDelay 自動存檔
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id="settingjson"&gt;setting.json
+&lt;/h3&gt;&lt;p&gt;這是我的 vscode 設定&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-json" data-lang="json"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#e6db74"&gt;&amp;#34;[python]&amp;#34;&lt;/span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;:&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#f92672"&gt;&amp;#34;editor.codeActionsOnSave&amp;#34;&lt;/span&gt;: {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#f92672"&gt;&amp;#34;source.organizeImports&amp;#34;&lt;/span&gt;: &lt;span style="color:#66d9ef"&gt;true&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; },
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#f92672"&gt;&amp;#34;editor.formatOnSave&amp;#34;&lt;/span&gt;: &lt;span style="color:#66d9ef"&gt;true&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#f92672"&gt;&amp;#34;editor.defaultFormatter&amp;#34;&lt;/span&gt;: &lt;span style="color:#e6db74"&gt;&amp;#34;eeyore.yapf&amp;#34;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }&lt;span style="color:#960050;background-color:#1e0010"&gt;,&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#e6db74"&gt;&amp;#34;yapf.args&amp;#34;&lt;/span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;:&lt;/span&gt; [
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#e6db74"&gt;&amp;#34;--style&amp;#34;&lt;/span&gt;, &lt;span style="color:#e6db74"&gt;&amp;#34;{based_on_style: yapf, column_limit=120,INDENT_WIDTH=4,SPLIT_BEFORE_DOT=false,SPLIT_ALL_TOP_LEVEL_COMMA_SEPARATED_VALUES=true,spaces_before_comment=&amp;#39;15, 20&amp;#39;}&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; ]&lt;span style="color:#960050;background-color:#1e0010"&gt;,&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#e6db74"&gt;&amp;#34;isort.args&amp;#34;&lt;/span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;:&lt;/span&gt; [
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#e6db74"&gt;&amp;#34;--src=${workspaceFolder}&amp;#34;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#e6db74"&gt;&amp;#34;--line-length=120&amp;#34;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; ]&lt;span style="color:#960050;background-color:#1e0010"&gt;,&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#e6db74"&gt;&amp;#34;flake8.args&amp;#34;&lt;/span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;:&lt;/span&gt;[
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#e6db74"&gt;&amp;#34;--max-line-length=120&amp;#34;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#e6db74"&gt;&amp;#34;--ignore=E402,F841,F401,E302,E305,W503,W292,E501,F841&amp;#34;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; ]&lt;span style="color:#960050;background-color:#1e0010"&gt;,&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;</description></item><item><title>Code Review Guide — 如何Code Review?</title><link>https://chung5116.github.io/p/code-review-guide/</link><pubDate>Sat, 20 Jan 2024 00:00:00 +0000</pubDate><guid>https://chung5116.github.io/p/code-review-guide/</guid><description>&lt;img src="https://chung5116.github.io/p/code-review-guide/%E7%9C%8B%E7%94%9A%E9%BA%BC.jpg" alt="Featured image of post Code Review Guide — 如何Code Review?" /&gt;&lt;h2 id="前言"&gt;前言
+&lt;/h2&gt;&lt;p&gt;隨著現在開發軟體、韌體的人數增加，大家協作同一份 repo 的頻率開始上升，尤其實在公司決定採用 Monorepo 架構後，協作頻率更是呈現指數型狂飆阿。&lt;/p&gt;
+&lt;p&gt;工程師難免會因為 deadline 壓力，而遞交出&lt;a class="link" href="https://www.opsera.io/blog/what-is-code-smell" target="_blank" rel="noopener"
+&gt;臭臭髒髒的 code&lt;/a&gt;，為了避免改 A 壞 B 這種情況發生，以及日後的維護性。這時，如何把關程式碼品質，又不影響到開發進度，就是 Reviewer 重要的課題。&lt;/p&gt;
+&lt;p&gt;我之前沒有 Code Review 經驗，想藉由整理這篇文章，好好學習學習。&lt;/p&gt;
+&lt;h2 id="what-is-code-review-"&gt;What is Code Review ?
+&lt;/h2&gt;&lt;p&gt;Wiki 上的定義&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Code review is a software quality assurance activity in which one or more people check a program, mainly by viewing and reading parts of its source code, either after implementation or as an interruption of implementation. At least one of the persons must not have authored the code. The persons performing the checking, excluding the author, are called &amp;ldquo;reviewers&amp;rdquo;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;它的目的是某種程度上預防可能的錯誤，和增進程式的品質。 而除此之外，透過適當的 code review 更可以讓團隊裡面的每一位成員了解各個部份的程式碼。 如此一來，在維護同一份程式的時候，團隊的成員就更能對程式的架構有一定的共識。可以避免不小心重覆做了其實已經有的功能，或者是做了一個功能結果發現和本來設計的理念大相逕庭的狀況發生。&lt;/p&gt;
+&lt;h2 id="code-review-看什麼"&gt;Code Review 看什麼
+&lt;/h2&gt;&lt;p&gt;&lt;img src="https://chung5116.github.io/p/code-review-guide/%E7%9C%8B%E7%94%9A%E9%BA%BC.jpg"
+width="415"
+height="234"
+srcset="https://chung5116.github.io/p/code-review-guide/%E7%9C%8B%E7%94%9A%E9%BA%BC_hu_d412436392c23c1c.jpg 480w, https://chung5116.github.io/p/code-review-guide/%E7%9C%8B%E7%94%9A%E9%BA%BC_hu_f4aed586adf170fe.jpg 1024w"
+loading="lazy"
+class="gallery-image"
+data-flex-grow="177"
+data-flex-basis="425px"
+&gt;&lt;/p&gt;
+&lt;h3 id="1-design"&gt;1. Design
+&lt;/h3&gt;&lt;p&gt;是審查中最重要的部分，看這次的 CL的內容是否合理，是否會跟其他系統產生衝突? 現在加入這項功能是好時機嗎?&lt;/p&gt;
+&lt;h3 id="2-functionality"&gt;2. Functionality
+&lt;/h3&gt;&lt;p&gt;CL 有達到開發者的預期嗎? CL 有幫助到 user 嗎? (公司其他的工程師或是客戶)&lt;/p&gt;
+&lt;p&gt;通常，我是說&amp;quot;通常&amp;quot;，我們會期待開發者自己把 CL 做好完整的測試。但，只要是人都會犯錯，所以需要 Reviewer 來幫忙一起檢查，是否有考慮到 edge case、concurrency 問題。嘗試站在使用者角度來看這份 CL。&lt;/p&gt;
+&lt;p&gt;尤其是在 CL 是關於 &lt;strong&gt;&amp;ldquo;使用者感受的到&amp;rdquo;&lt;/strong&gt; 的部分，例如 UI 的更改。這時候，光看 code 很難知道這些改動是如何影響到使用者。對於這一類的CL，可以要求開發者附上 demo，例如 UI 改動前後的截圖等。&lt;/p&gt;
+&lt;p&gt;另外，要特別注意的是有沒有因為 parallel programming 而造成 deadlocks or race conditions。這類的問題，通常不容易發現。最輕鬆的解決方式，就是不去使用這一類的 Lib or model。(逃避可恥，但是有用)&lt;/p&gt;
+&lt;h3 id="3-complexity"&gt;3. Complexity
+&lt;/h3&gt;&lt;p&gt;CL 是否太過複雜? 檢查每一層級，單行code是否太複雜? function 是否太複雜? class 是否太複雜? 太複雜，代表不易讀，也代表其他工程師要使用或修改時，容易發生錯誤。&lt;/p&gt;
+&lt;p&gt;另一種太複雜狀況是 &lt;strong&gt;過度設計&lt;/strong&gt;，開發者把 code 變得太過通用，或是加入了現在不需要的功能。雖然開發者是求好心切，為未來可能需要解決的問題做準備，但 Reviewer 還是需要注意此狀況，讓開發者專注在現在要解決的問題上。&lt;/p&gt;
+&lt;h3 id="4-tests"&gt;4. Tests
+&lt;/h3&gt;&lt;p&gt;根據情況，要求 unit, integration, or end-to-end tests，我知道很多工程師都不喜歡寫測試，這時候 Reviewer 需要硬起來要求!&lt;/p&gt;
+&lt;p&gt;記得，測試也是需要被維護的，不要因為它不是主要功能，就忽視它。&lt;/p&gt;
+&lt;p&gt;雖然寫測試不是仙丹，能治好百 bug，至少能在一定程度上把關程式碼品質。如果把程式碼比喻成一台火車，那麼，寫測試至少可以確保，這一台火車不會開一開，半路上突然開出軌。&lt;/p&gt;
+&lt;p&gt;延伸閱讀:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a class="link" href="https://www.yinwang.org/blog-cn/2016/09/14/tests?source=post_page-----e55930d44fba--------------------------------" target="_blank" rel="noopener"
+&gt;為什麼我們不好意思承認，我們不知道如何寫測試？&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id="5-naming"&gt;5. Naming
+&lt;/h3&gt;&lt;p&gt;正確的命名，能夠大幅增加程式碼可讀性。&lt;/p&gt;
+&lt;p&gt;取名取什麼那 a,b,c 都欠吊起來打! 拜託不要互相傷害。&lt;/p&gt;
+&lt;p&gt;&lt;img src="https://chung5116.github.io/p/code-review-guide/%E8%AE%8A%E6%95%B8.jpg"
+width="415"
+height="233"
+srcset="https://chung5116.github.io/p/code-review-guide/%E8%AE%8A%E6%95%B8_hu_e21571b82cb87a6b.jpg 480w, https://chung5116.github.io/p/code-review-guide/%E8%AE%8A%E6%95%B8_hu_51c95e66aa37f160.jpg 1024w"
+loading="lazy"
+class="gallery-image"
+data-flex-grow="178"
+data-flex-basis="427px"
+&gt;&lt;/p&gt;
+&lt;h3 id="6-comments"&gt;6. Comments
+&lt;/h3&gt;&lt;p&gt;解釋程式碼為什麼存在 (Why)，而不是解釋程式碼做了什麼(What)。
+如果程式碼不能輕易被理解，那應該要想辦法簡化程式碼。&lt;/p&gt;
+&lt;p&gt;但還是有些例外，例如像是一些複雜的演算法，或是商業邏輯。&lt;/p&gt;
+&lt;p&gt;延伸閱讀:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a class="link" href="https://medium.com/%E6%89%8B%E5%AF%AB%E7%AD%86%E8%A8%98/clean-code-index-51e209cc47db" target="_blank" rel="noopener"
+&gt;Clean Code&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id="7-style"&gt;7. Style
+&lt;/h3&gt;&lt;p&gt;就看看公司有沒有規定囉。如果沒有，可以參考 &lt;a class="link" href="https://google.github.io/styleguide/" target="_blank" rel="noopener"
+&gt;Google&lt;/a&gt;的&lt;/p&gt;
+&lt;p&gt;延伸閱讀:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;[Python Coding Style]&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id="8-consistency"&gt;8. Consistency
+&lt;/h3&gt;&lt;p&gt;如果現存的程式碼不符合 style 怎麼辦? 規定就是拿來遵守，改就對了，讓程式碼品質就像童子軍規則一樣 (離開營地前，讓營地比使用前更加乾淨)。每次打開專案，我們就改一點，讓程式碼的品質變得更好。&lt;/p&gt;
+&lt;h3 id="9-documentation"&gt;9. Documentation
+&lt;/h3&gt;&lt;p&gt;&lt;img src="https://chung5116.github.io/p/code-review-guide/%E5%BF%AB%E9%80%83.jpg"
+width="415"
+height="303"
+srcset="https://chung5116.github.io/p/code-review-guide/%E5%BF%AB%E9%80%83_hu_1994e2aef61cc3d6.jpg 480w, https://chung5116.github.io/p/code-review-guide/%E5%BF%AB%E9%80%83_hu_a03166631422cc10.jpg 1024w"
+loading="lazy"
+class="gallery-image"
+data-flex-grow="136"
+data-flex-basis="328px"
+&gt;
+如果 CL 更改的介面會影響到其他人使用的地方，請檢查相關文件是有一併做更新。&lt;/p&gt;
+&lt;h2 id="10-every-line"&gt;10. Every Line
+&lt;/h2&gt;&lt;p&gt;通常，會需要看過每一行 CL 的程式碼。像一些 data files, 自動生成程式碼等，可以快速掃過。&lt;/p&gt;
+&lt;p&gt;但只是要人寫出來的程式碼，請仔細慎查，確保你知道這些程式碼的用途。&lt;/p&gt;
+&lt;p&gt;如果 Reviewer 覺得程式碼讀起來很痛苦，很難讀，讓整體 review 速度變慢。那麼，應該要讓開發者知道這一點，讓他們把 CL 修改成更容易懂，再遞交審查。這也幫助之後維護這份程式碼的工程師。&lt;/p&gt;
+&lt;p&gt;如果你覺得不夠資格審查某段程式碼，請找一位夠格的審查者。&lt;/p&gt;
+&lt;h2 id="11-context"&gt;11. Context
+&lt;/h2&gt;&lt;p&gt;用不同的角度審查CL。有時候，雖然只是改動幾行code，必須看整份檔案才能確保改動是合理的。&lt;/p&gt;
+&lt;p&gt;例如: 改動只有4行 code，但他把這4行加到一個100行的 function，當你看到整份檔案，你就會發現這 function 需要被拆解。&lt;/p&gt;
+&lt;h2 id="12-good-things"&gt;12. Good Things
+&lt;/h2&gt;&lt;p&gt;如果在 CL 看到不錯的內容，告訴開發者，有時告訴開發者他們做對了什麼比告訴他們做錯了什麼更有價值。&lt;/p&gt;
+&lt;p&gt;&lt;img src="https://chung5116.github.io/p/code-review-guide/%E5%A4%A7%E6%8B%87%E6%8C%87.jpg"
+width="415"
+height="234"
+srcset="https://chung5116.github.io/p/code-review-guide/%E5%A4%A7%E6%8B%87%E6%8C%87_hu_4c9c0fd4c148e21f.jpg 480w, https://chung5116.github.io/p/code-review-guide/%E5%A4%A7%E6%8B%87%E6%8C%87_hu_933f43084f198c0c.jpg 1024w"
+loading="lazy"
+class="gallery-image"
+data-flex-grow="177"
+data-flex-basis="425px"
+&gt;&lt;/p&gt;
+&lt;h2 id="summary"&gt;Summary
+&lt;/h2&gt;&lt;p&gt;Review 時，確認以下幾點&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;程式碼都是經過精心設計的&lt;/li&gt;
+&lt;li&gt;該功能對於程式碼的使用者來說是有用的&lt;/li&gt;
+&lt;li&gt;任何 UI 改動都要是合理的&lt;/li&gt;
+&lt;li&gt;任何平行運算都要安全地完成&lt;/li&gt;
+&lt;li&gt;程式碼沒有過度設計&lt;/li&gt;
+&lt;li&gt;開發者並沒有實作將來可能需要，但不知道他們現在需不需要的功能&lt;/li&gt;
+&lt;li&gt;有適當的單元測試&lt;/li&gt;
+&lt;li&gt;測試有經過良好的設計&lt;/li&gt;
+&lt;li&gt;名稱是有意義的&lt;/li&gt;
+&lt;li&gt;註解是清楚且有用，解釋 why 而非 what&lt;/li&gt;
+&lt;li&gt;程式碼有適當的文件記錄&lt;/li&gt;
+&lt;li&gt;程式碼有符合 coding style&lt;/li&gt;
+&lt;/ul&gt;</description></item></channel></rss>
